@@ -10,7 +10,7 @@ typedef struct Nodo {
 } Nodo;
 
 typedef struct Array {
-  Nodo **array;
+  Nodo *array;
   int used;
   int size;
 } Array;

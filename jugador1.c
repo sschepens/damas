@@ -705,7 +705,7 @@ Array* generarMovimientos(Nodo *n, int jugador, int nivel) {
     }
   }
   for (i = 0; i < arboles->used; i++) {
-    concatArray(arboles->array[i]->hijos, generarMovimientos(&(arboles->array[i]), jOponente(jugador), nivel + 1));
+    concatArray(arboles->array[i].hijos, generarMovimientos(&(arboles->array[i]), jOponente(jugador), nivel + 1));
   }
   free(taux);
   return arboles;
