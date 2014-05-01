@@ -5,7 +5,7 @@
 #include <time.h>
 #include "funcjugador.c"
 
-#define NIVELES 5
+#define NIVELES 3
 
 int filaAvance(int j){ //devuelve sentido que avanza cada jugador
   if (j == 1){
@@ -254,17 +254,14 @@ int evaluarRiesgoInicial(Nodo *t, int i, int j, int jug){ //devuelve el riesgo b
 Array * recursionComiendoDama(Nodo *t, int jugador, int dir, int i, int j){
   bool nomovDerecha, nomovIzquierda;
   int iDestino,jDestino;
-  Nodo *nuevo = crearNodo();
-  Array *movimientos = crearArray(1);
+  Nodo *nuevo;
+  Array *movimientos = crearArray(0);
   nomovDerecha = false;
   nomovIzquierda = false;
 
   if (dimensionesValidas(i+(2*dir)) && dimensionesValidas(j+2) && dimensionesValidas(i+dir) && dimensionesValidas(j+1) && casilleroVacio(t, i+(2*dir), j+2) && fichaOponente(t, i+dir, j+1, jugador)){
     iDestino = i + (2 * dir);
     jDestino = j + 2;
-    eliminarNodo(nuevo);
-    free(nuevo);
-    nuevo = NULL;
     nuevo = crearNodo();
     copiarArbolArbol(t, nuevo);
     nuevo->riesgo = t->riesgo;
@@ -276,15 +273,14 @@ Array * recursionComiendoDama(Nodo *t, int jugador, int dir, int i, int j){
     nuevo->tablero[iDestino][jDestino] = t->tablero[i][j]; //coloco mi ficha una despues
     nuevo->tablero[i][j] = 1; //pongo blanco donde estaba mi ficha
     concatArray(movimientos, recursionComiendoDama(nuevo, jugador, dir, iDestino, jDestino));
+    free(nuevo);
+    nuevo = NULL;
   } else {
     nomovDerecha = true;
   }
   if (dimensionesValidas(i+(2*dir)) && dimensionesValidas(j-2) && casilleroVacio(t, i+(2*dir), j-2) && fichaOponente(t, i+dir, j-1, jugador)){
     iDestino = i + (2 * dir);
     jDestino = j - 2;
-    eliminarNodo(nuevo);
-    free(nuevo);
-    nuevo = NULL;
     nuevo = crearNodo();
     copiarArbolArbol(t, nuevo);
     nuevo->riesgo = t->riesgo;
@@ -296,18 +292,23 @@ Array * recursionComiendoDama(Nodo *t, int jugador, int dir, int i, int j){
     nuevo->tablero[iDestino][jDestino] = t->tablero[i][j]; //coloco mi ficha una despues
     nuevo->tablero[i][j] = 1; //pongo blanco donde estaba mi ficha
     concatArray(movimientos, recursionComiendoDama(nuevo, jugador, dir, iDestino, jDestino));
+    free(nuevo);
+    nuevo = NULL;
   } else {
     nomovIzquierda = true;
   }
   if (nomovDerecha && nomovIzquierda) {
-    insertArray(movimientos, t);
+    nuevo = crearNodo();
+    copiarArbolArbol(t, nuevo);
+    insertArray(movimientos, nuevo);
+    free(nuevo);
   }
   return movimientos;
 }
 
 Array * agregarMovimientosDama(Nodo *n, int i, int j, int jug){//devuelve un arreglo con todos los movimientos posibles para la dama posicionada en i,j
-  Nodo *nuevo = crearNodo();
-  Array *movimientos = crearArray(1);
+  Nodo *nuevo;
+  Array *movimientos = crearArray(0);
   int aux = 1;
   bool salir1, salir2, salir3, salir4;
   salir1 = false;
@@ -316,9 +317,6 @@ Array * agregarMovimientosDama(Nodo *n, int i, int j, int jug){//devuelve un arr
   salir4 = false;
   while ((aux<TAMANIO) && (!salir1 && !salir2 && !salir3 && !salir4 )){
     if (dimensionesValidas(i+aux) && dimensionesValidas(j+aux) && (casilleroVacio(n,i+aux,j+aux) && !salir1)){
-      eliminarNodo(nuevo);
-      free(nuevo);
-      nuevo = NULL;
       nuevo = crearNodo();
       copiarArbolArbol(n, nuevo);
       nuevo->riesgo += n->riesgo;
@@ -326,11 +324,10 @@ Array * agregarMovimientosDama(Nodo *n, int i, int j, int jug){//devuelve un arr
       nuevo->tablero[i][j] = 1;
       nuevo->riesgo += evaluarRiesgo(n, i+aux, j+aux, jug);
       insertArray(movimientos, nuevo);
+      free(nuevo);
+      nuevo = NULL;
     } else {
       if (dimensionesValidas(i+aux+1) && dimensionesValidas(j+aux+1) && casilleroVacio(n,i+aux+1,j+aux+1) && (fichaOponente(n, i+aux, j+aux, jug) && !salir1)){
-        eliminarNodo(nuevo);
-        free(nuevo);
-        nuevo = NULL;
         nuevo = crearNodo();
         copiarArbolArbol(n, nuevo);
         nuevo->riesgo += n->riesgo;
@@ -342,14 +339,13 @@ Array * agregarMovimientosDama(Nodo *n, int i, int j, int jug){//devuelve un arr
             nuevo->riesgo -= 1;
         nuevo->riesgo += evaluarRiesgo(n, i+aux+1, j+aux+1, jug);
         concatArray(movimientos, recursionComiendoDama(nuevo, jug, 1, i+aux+1, j+aux+1));
+        free(nuevo);
+        nuevo = NULL;
       }
       salir1 = true;
     }
 
     if (dimensionesValidas(i+aux) && dimensionesValidas(j-aux) && casilleroVacio(n,i+aux,j-aux) && !salir2){
-      eliminarNodo(nuevo);
-      free(nuevo);
-      nuevo = NULL;
       nuevo = crearNodo();
       copiarArbolArbol(n, nuevo);
       nuevo->riesgo += n->riesgo;
@@ -357,11 +353,10 @@ Array * agregarMovimientosDama(Nodo *n, int i, int j, int jug){//devuelve un arr
       nuevo ->tablero[i][j] = 1;
       nuevo->riesgo += evaluarRiesgo(n, i+aux, j-aux, jug);
       insertArray(movimientos, nuevo);
+      free(nuevo);
+      nuevo = NULL;
     } else {
       if (dimensionesValidas(i+aux+1) && dimensionesValidas(j-aux-1)  && casilleroVacio(n,i+aux+1,j-aux-1) && (fichaOponente(n, i+aux, j-aux, jug) && !salir2)){
-        eliminarNodo(nuevo);
-        free(nuevo);
-        nuevo = NULL;
         nuevo = crearNodo();
         copiarArbolArbol(n, nuevo);
         nuevo->riesgo += n->riesgo;
@@ -370,16 +365,15 @@ Array * agregarMovimientosDama(Nodo *n, int i, int j, int jug){//devuelve un arr
         nuevo->tablero[i+aux][j-aux] = 1;
         nuevo->riesgo -= 1;
         if (fichaOponente(n, i+aux, j-aux, jug) == dOponente(jug))
-            nuevo->riesgo -= 1;
+          nuevo->riesgo -= 1;
         nuevo->riesgo += evaluarRiesgo(n, i+aux+1, j-aux-1, jug);
         concatArray(movimientos, recursionComiendoDama(nuevo, jug, 1, i+aux+1, j-aux-1));
+        free(nuevo);
+        nuevo = NULL;
       }
       salir2 = true;
     }
     if (dimensionesValidas(i-aux) && dimensionesValidas(j+aux) && (casilleroVacio(n,i-aux,j+aux) && !salir3)){
-      eliminarNodo(nuevo);
-      free(nuevo);
-      nuevo = NULL;
       nuevo = crearNodo();
       copiarArbolArbol(n, nuevo);
       nuevo->riesgo += n->riesgo;
@@ -387,11 +381,10 @@ Array * agregarMovimientosDama(Nodo *n, int i, int j, int jug){//devuelve un arr
       nuevo ->tablero[i][j] = 1;
       nuevo->riesgo += evaluarRiesgo(n, i-aux, j+aux, jug);
       insertArray(movimientos, nuevo);
+      free(nuevo);
+      nuevo = NULL;
     }else{
       if (dimensionesValidas(i-aux-1) && dimensionesValidas(j+aux+1)  && casilleroVacio(n,i-aux-1,j+aux+1) && (fichaOponente(n, i-aux, j+aux, jug) && !salir3)){
-        eliminarNodo(nuevo);
-        free(nuevo);
-        nuevo = NULL;
         nuevo = crearNodo();
         copiarArbolArbol(n, nuevo);
         nuevo->riesgo += n->riesgo;
@@ -403,13 +396,12 @@ Array * agregarMovimientosDama(Nodo *n, int i, int j, int jug){//devuelve un arr
             nuevo->riesgo -= 1;
         nuevo->riesgo += evaluarRiesgo(n, i-aux-1, j+aux+1, jug);
         concatArray(movimientos, recursionComiendoDama(nuevo, jug, -1, i-aux-1, j+aux+1));
+        free(nuevo);
+        nuevo = NULL;
       }
       salir3 = true;
     }
     if (dimensionesValidas(i-aux) && dimensionesValidas(j-aux) && (casilleroVacio(n,i-aux,j-aux) && !salir4)){
-      eliminarNodo(nuevo);
-      free(nuevo);
-      nuevo = NULL;
       nuevo = crearNodo();
       copiarArbolArbol(n, nuevo);
       nuevo->riesgo += n->riesgo;
@@ -417,11 +409,10 @@ Array * agregarMovimientosDama(Nodo *n, int i, int j, int jug){//devuelve un arr
       nuevo ->tablero[i][j] = 1;
       nuevo->riesgo += evaluarRiesgo(n, i-aux, j-aux, jug);
       insertArray(movimientos, nuevo);
+      free(nuevo);
+      nuevo = NULL;
     } else {
       if (dimensionesValidas(i-aux-1) && dimensionesValidas(j-aux-1)  && (casilleroVacio(n,i-aux-1,j-aux-1) && fichaOponente(n, i-aux, j-aux, jug) && !salir4)){
-        eliminarNodo(nuevo);
-        free(nuevo);
-        nuevo = NULL;
         nuevo = crearNodo();
         copiarArbolArbol(n, nuevo);
         nuevo->riesgo += n->riesgo;
@@ -433,6 +424,8 @@ Array * agregarMovimientosDama(Nodo *n, int i, int j, int jug){//devuelve un arr
             nuevo->riesgo -= 1;
         nuevo->riesgo += evaluarRiesgo(n, i-aux-1, j-aux-1, jug);
         concatArray(movimientos, recursionComiendoDama(nuevo, jug, -1, i-aux-1, j-aux-1));
+        free(nuevo);
+        nuevo = NULL;
       }
       salir4 = true;
     }
@@ -444,17 +437,14 @@ Array * agregarMovimientosDama(Nodo *n, int i, int j, int jug){//devuelve un arr
 Array* recursionComiendo(Nodo *t, int jugador, int i, int j) {//i es para filas y j para columnas, sory reutilice un toque de codigo paja cambiarlo
   bool nomovDerecha, nomovIzquierda;
   int iDestino,jDestino;
-  Nodo *nuevo = crearNodo();
-  Array *movimientos = crearArray(1);
+  Nodo *nuevo;
+  Array *movimientos = crearArray(0);
   nomovDerecha = false;
   nomovIzquierda = false;
 
   if (dimensionesValidas(i+(2*filaAvance(jugador))) && dimensionesValidas(j+2) && dimensionesValidas(i+filaAvance(jugador)) && dimensionesValidas(j+1) && casilleroVacio(t, i+(2*filaAvance(jugador)), j+2) && fichaOponente(t, i+filaAvance(jugador), j+1, jugador)){
     iDestino = i + (2 * filaAvance(jugador));
     jDestino = j + 2;
-    eliminarNodo(nuevo);
-    free(nuevo);
-    nuevo = NULL;
     nuevo = crearNodo();
     copiarArbolArbol(t, nuevo);
     nuevo->riesgo = t->riesgo;
@@ -471,15 +461,14 @@ Array* recursionComiendo(Nodo *t, int jugador, int i, int j) {//i es para filas 
     }
     nuevo->tablero[i][j] = 1; //pongo blanco donde estaba mi ficha
     concatArray(movimientos, recursionComiendo(nuevo, jugador, iDestino, jDestino));
+    free(nuevo);
+    nuevo = NULL;
   } else {
     nomovDerecha = true;
   }
   if (dimensionesValidas(i+(2*filaAvance(jugador))) && dimensionesValidas(j-2) && casilleroVacio(t, i+(2*filaAvance(jugador)), j-2) && fichaOponente(t, i+filaAvance(jugador), j-1, jugador)){
     iDestino = i + (2 * filaAvance(jugador));
     jDestino = j - 2;
-    eliminarNodo(nuevo);
-    free(nuevo);
-    nuevo = NULL;
     nuevo = crearNodo();
     copiarArbolArbol(t, nuevo);
     nuevo->riesgo = t->riesgo;
@@ -496,21 +485,26 @@ Array* recursionComiendo(Nodo *t, int jugador, int i, int j) {//i es para filas 
     }
     nuevo->tablero[i][j] = 1; //pongo blanco donde estaba mi ficha
     concatArray(movimientos, recursionComiendo(nuevo, jugador, iDestino, jDestino));
+    free(nuevo);
+    nuevo = NULL;
   } else {
     nomovIzquierda = true;
   }
   if (nomovDerecha && nomovIzquierda) {
-    insertArray(movimientos, t);
+    nuevo = crearNodo();
+    copiarArbolArbol(t, nuevo);
+    insertArray(movimientos, nuevo);
+    free(nuevo);
   }
   return movimientos;
 }
 
 Array* arbolMovimientos(Tablero *t, int jugador, int i, int j) {
   //generar un arbol de movimientos posibles a partir de este casillero; jugador se pasa para saber la direccion hacia donde jugar;
-  Nodo *nuevo = crearNodo();
+  Nodo *nuevo;
   Nodo *naux = crearNodo();
   int iDestino, jDestino;
-  Array *movimientos = crearArray(1);
+  Array *movimientos = crearArray(0);
   copiarTableroArbol(t, naux);
   naux->riesgo += evaluarRiesgoInicial(naux, i, j, jugador);
 
@@ -518,9 +512,6 @@ Array* arbolMovimientos(Tablero *t, int jugador, int i, int j) {
     if (dimensionesValidas(i+filaAvance(jugador)) && dimensionesValidas(j+1) && casilleroVacio(naux, i+filaAvance(jugador), j+1)) {
       iDestino = i + filaAvance(jugador);
       jDestino = j + 1;
-      eliminarNodo(nuevo);
-      free(nuevo);
-      nuevo = NULL;
       nuevo = crearNodo();
       copiarTableroArbol(t, nuevo);
       nuevo->riesgo += naux->riesgo;
@@ -532,14 +523,13 @@ Array* arbolMovimientos(Tablero *t, int jugador, int i, int j) {
       }
       nuevo->riesgo += evaluarRiesgo(nuevo, iDestino, jDestino, jugador);
       insertArray(movimientos, nuevo);
+      free(nuevo);
+      nuevo = NULL;
     } else if (dimensionesValidas(i+(2*filaAvance(jugador))) && dimensionesValidas(j+2)
         && casilleroVacio(naux, i+(2*filaAvance(jugador)), j+2)
         && fichaOponente(naux, i+filaAvance(jugador), j+1, jugador)) {
       iDestino = i + (2 * filaAvance(jugador));
       jDestino = j + 2;
-      eliminarNodo(nuevo);
-      free(nuevo);
-      nuevo = NULL;
       nuevo = crearNodo();
       copiarTableroArbol(t,nuevo);
       nuevo->riesgo += naux->riesgo;
@@ -557,14 +547,13 @@ Array* arbolMovimientos(Tablero *t, int jugador, int i, int j) {
       nuevo->tablero[i][j] = 1; //pongo blanco donde estaba mi ficha
       nuevo->riesgo += evaluarRiesgo(nuevo, iDestino, jDestino, jugador);
       concatArray(movimientos, recursionComiendo(nuevo, jugador, iDestino, jDestino));
+      free(nuevo);
+      nuevo = NULL;
     }
     //moviendo en diagonal hacia la izquierda
     if (dimensionesValidas(i+filaAvance(jugador)) && dimensionesValidas(j-1) && casilleroVacio(naux, i+filaAvance(jugador),j-1)){ //Casillero esquina de abajo a la derecha
       iDestino = i+filaAvance(jugador);
       jDestino = j - 1;
-      eliminarNodo(nuevo);
-      free(nuevo);
-      nuevo = NULL;
       nuevo = crearNodo();
       copiarTableroArbol(t, nuevo);
       nuevo->riesgo += naux->riesgo;
@@ -577,13 +566,12 @@ Array* arbolMovimientos(Tablero *t, int jugador, int i, int j) {
       nuevo->tablero[i][j] = 1;
       nuevo->riesgo += evaluarRiesgo(nuevo, iDestino, jDestino, jugador);
       insertArray(movimientos, nuevo);
+      free(nuevo);
+      nuevo = NULL;
     } else {
       if (dimensionesValidas(j-2) && dimensionesValidas(i+(2*filaAvance(jugador))) && casilleroVacio(naux, i+(2*filaAvance(jugador)), j-2) && fichaOponente(naux, i+filaAvance(jugador), j-1, jugador)){
         iDestino = i + (2 * filaAvance(jugador));
         jDestino = j - 2;
-        eliminarNodo(nuevo);
-        free(nuevo);
-        nuevo = NULL;
         nuevo = crearNodo();
         copiarTableroArbol(t,nuevo);
         nuevo->riesgo += naux->riesgo;
@@ -601,35 +589,36 @@ Array* arbolMovimientos(Tablero *t, int jugador, int i, int j) {
         nuevo->tablero[i][j] = 1; //pongo blanco donde estaba mi ficha
         nuevo->riesgo += evaluarRiesgo(nuevo, iDestino, jDestino, jugador);
         concatArray(movimientos, recursionComiendo(nuevo, jugador, iDestino, jDestino));
+        free(nuevo);
+        nuevo = NULL;
       }
     }
   //Seria una dama con la ficha que estamos tratando
   } else if (fichaEnCasillero(naux, i, j) == dama(jugador)) {
     concatArray(movimientos, agregarMovimientosDama(naux, i, j, jugador));
   }
-  eliminarNodo(naux);
   free(naux);
+  naux = NULL;
   return movimientos;
 }
 
 int mejorCamino(Nodo *n, int nivel) {
   int menorRiesgo, riesgoAux, i;
-  printf("mejorCamino nivel: %d\n", nivel);
-  if (n->hijos->used == 0) {
+  if (n->hijos.used == 0) {
     return n->riesgo;
   }
   if (nivel % 2 == 0) {
-    menorRiesgo = n->riesgo + mejorCamino(&(n->hijos->array[0]), nivel+1);
-    for (i = 1; i < n->hijos->used; i++) {
-      riesgoAux = n->riesgo + mejorCamino(&(n->hijos->array[i]), nivel+1);
+    menorRiesgo = n->riesgo + mejorCamino(&(n->hijos.array[0]), nivel+1);
+    for (i = 1; i < n->hijos.used; i++) {
+      riesgoAux = n->riesgo + mejorCamino(&(n->hijos.array[i]), nivel+1);
       if (riesgoAux < menorRiesgo) {
         menorRiesgo = riesgoAux;
       }
     }
   } else {
-    menorRiesgo = n->riesgo - mejorCamino(&(n->hijos->array[0]), nivel+1);
-    for (i = 1; i < n->hijos->used; i++) {
-      riesgoAux = n->riesgo - mejorCamino(&(n->hijos->array[i]), nivel+1);
+    menorRiesgo = n->riesgo - mejorCamino(&(n->hijos.array[0]), nivel+1);
+    for (i = 1; i < n->hijos.used; i++) {
+      riesgoAux = n->riesgo - mejorCamino(&(n->hijos.array[i]), nivel+1);
       if (riesgoAux > menorRiesgo) {
         menorRiesgo = riesgoAux;
       }
@@ -642,14 +631,13 @@ Nodo* mejorMovimiento(Array *a) {
   int i, menorRiesgo, riesgoAux, r;
   Nodo* naux = crearNodo();
   Nodo* mejor = crearNodo();
-  Array *array = crearArray(1);
+  Array *array = crearArray(0);
   if (a->used == 0) {
     return NULL;
   }
   menorRiesgo = mejorCamino(&(a->array[0]), 0);
   copiarArbolArbol(&(a->array[0]), naux);
   insertArray(array, naux);
-  eliminarNodo(naux);
   free(naux);
   naux = NULL;
   naux = crearNodo();
@@ -658,7 +646,6 @@ Nodo* mejorMovimiento(Array *a) {
     if (riesgoAux == menorRiesgo) {
       copiarArbolArbol(&(a->array[i]), naux);
       insertArray(array, naux);
-      eliminarNodo(naux);
       free(naux);
       naux = NULL;
       naux = crearNodo();
@@ -667,12 +654,11 @@ Nodo* mejorMovimiento(Array *a) {
         freeArray(array);
         free(array);
         array = NULL;
-        array = crearArray(1);
+        array = crearArray(0);
       }
       menorRiesgo = riesgoAux;
       copiarArbolArbol(&(a->array[i]), naux);
       insertArray(array, naux);
-      eliminarNodo(naux);
       free(naux);
       naux = NULL;
       naux = crearNodo();
@@ -683,7 +669,6 @@ Nodo* mejorMovimiento(Array *a) {
   copiarArbolArbol(&(array->array[r]), mejor);
   freeArray(array);
   free(array);
-  eliminarNodo(naux);
   free(naux);
   return mejor;
 }
@@ -692,8 +677,9 @@ Array* generarMovimientos(Nodo *n, int jugador, int nivel) {
   int i, j;
   Tablero *taux = crearTableroVacio();
   //arreglo de arboles, cada ficha que tengo me va a dar un arbol de movimientos
-  Array *arboles = crearArray(1);
+  Array *arboles = crearArray(0);
   if (nivel == NIVELES) {
+    free(taux);
     return arboles;
   }
   for (i = 0; i < TAMANIO; i++) {
@@ -705,7 +691,7 @@ Array* generarMovimientos(Nodo *n, int jugador, int nivel) {
     }
   }
   for (i = 0; i < arboles->used; i++) {
-    concatArray(arboles->array[i].hijos, generarMovimientos(&(arboles->array[i]), jOponente(jugador), nivel + 1));
+    concatArray(&(arboles->array[i].hijos), generarMovimientos(&(arboles->array[i]), jOponente(jugador), nivel + 1));
   }
   free(taux);
   return arboles;
@@ -718,9 +704,12 @@ Tablero* elegirMovimiento(Tablero *t, int jugador) {
   //arreglo de arboles, cada ficha que tengo me va a dar un arbol de movimientos
   Array *arboles = generarMovimientos(naux, jugador, 0);
 
+  eliminarNodo(naux);
+  free(naux);
   naux = mejorMovimiento(arboles);
   if (naux == NULL) {
-    return t;
+    copiarTablero(t, taux);
+    return taux;
   }
   copiarArbolTablero(naux, taux);
   freeArray(arboles);
